@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { createTencentVodPsign } from "@/lib/video/tencent-psign";
+import { createTencentVodPsign, toHttpsVodPlayUrl } from "@/lib/video/tencent-psign";
 
 export async function GET(req: Request) {
   const { userId } = await auth();
@@ -47,21 +47,64 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "vod not configured" }, { status: 500 });
   }
 
-  const psign = await createTencentVodPsign({ appId, fileId, playKey });
+  const adaptiveDefinition = Number(process.env.TENCENT_VOD_ADAPTIVE_DEFINITION || "10");
+
+  // Prefer adaptive if available; fall back to original.
+  let psign = await createTencentVodPsign({
+    appId,
+    fileId,
+    playKey,
+    scheme: "HTTPS",
+    contentInfo: {
+      audioVideoType: "RawAdaptive",
+      rawAdaptiveDefinition: adaptiveDefinition,
+    },
+  });
 
   let playUrl: string | null = null;
   let coverUrl: string | null = null;
+  let mode: "adaptive" | "original" = "adaptive";
+
   try {
     const infoRes = await fetch(
       `https://playvideo.qcloud.com/getplayinfo/v4/${appId}/${fileId}?psign=${encodeURIComponent(psign)}`,
       { cache: "no-store" }
     );
     const info = await infoRes.json();
-    playUrl = info?.media?.originalInfo?.url || null;
-    coverUrl = info?.media?.basicInfo?.coverUrl || null;
+    const adaptiveUrl =
+      info?.media?.adaptiveDynamicStreamingInfo?.adaptiveDynamicStreamingList?.[0]?.url ||
+      info?.media?.streamingInfo?.plainOutput?.url ||
+      null;
+    if (info?.code === 0 && adaptiveUrl) {
+      playUrl = toHttpsVodPlayUrl(adaptiveUrl, appId);
+      coverUrl = info?.media?.basicInfo?.coverUrl || null;
+    } else {
+      mode = "original";
+      psign = await createTencentVodPsign({
+        appId,
+        fileId,
+        playKey,
+        scheme: "HTTPS",
+        contentInfo: { audioVideoType: "Original" },
+      });
+      const originalRes = await fetch(
+        `https://playvideo.qcloud.com/getplayinfo/v4/${appId}/${fileId}?psign=${encodeURIComponent(psign)}`,
+        { cache: "no-store" }
+      );
+      const originalInfo = await originalRes.json();
+      playUrl = toHttpsVodPlayUrl(originalInfo?.media?.originalInfo?.url || null, appId);
+      coverUrl = originalInfo?.media?.basicInfo?.coverUrl || null;
+    }
   } catch {
-    // keep psign-only fallback
+    mode = "original";
+    psign = await createTencentVodPsign({
+      appId,
+      fileId,
+      playKey,
+      scheme: "HTTPS",
+      contentInfo: { audioVideoType: "Original" },
+    });
   }
 
-  return NextResponse.json({ psign, appId, fileId, playUrl, coverUrl });
+  return NextResponse.json({ psign, appId, fileId, playUrl, coverUrl, mode });
 }

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useId, useRef, useState } from "react";
 
@@ -81,7 +81,8 @@ export function TencentVodPlayer({ fileId, appId, activityId, onEnded, onError }
 
         if (disposed) return;
 
-        if (url) {
+        // Prefer HTTPS play URL for stable browser playback on Netlify.
+        if (url && /^https:/i.test(url)) {
           setPlayUrl(url);
           setMode("html5");
           setReady(true);
@@ -99,7 +100,8 @@ export function TencentVodPlayer({ fileId, appId, activityId, onEnded, onError }
           psign,
           autoplay: false,
           controls: true,
-          preload: "meta",
+          preload: "auto",
+          languages: "zh-CN",
         });
         player.on("loadedmetadata", () => {
           if (!disposed) setReady(true);
@@ -136,7 +138,7 @@ export function TencentVodPlayer({ fileId, appId, activityId, onEnded, onError }
           controlsList="nodownload noplaybackrate"
           disablePictureInPicture
           playsInline
-          preload="metadata"
+          preload="auto"
           onEnded={() => onEnded?.()}
           onError={() => onError?.()}
           onContextMenu={(e) => e.preventDefault()}
@@ -157,7 +159,7 @@ export function TencentVodPlayer({ fileId, appId, activityId, onEnded, onError }
         className="h-full w-full"
         playsInline
         webkit-playsinline="true"
-        preload="metadata"
+        preload="auto"
       />
     </div>
   );

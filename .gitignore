@@ -65,3 +65,15 @@ signup.html
 home.html
 home2.html
 
+
+# local deploy/secrets
+.env
+.env.*
+!.env.example
+.env.netlify
+.supabase-db-password.txt
+.netlify/
+data/deploys.*
+data/git-ls.*
+*.db
+*.db-journal
