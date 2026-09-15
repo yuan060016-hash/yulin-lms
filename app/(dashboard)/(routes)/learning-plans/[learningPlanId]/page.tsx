@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { auth } from "@clerk/nextjs";
+import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import LearningPlanDetailsForm from './_components/detail-form'
 
@@ -14,7 +14,7 @@ type DetailsPageProps = {
 const DetailsPage = async ({
   params
 }: DetailsPageProps) => {
-  const { userId } = auth();
+  const { userId } = await auth();
 
   if (!userId) {
     return redirect("/");

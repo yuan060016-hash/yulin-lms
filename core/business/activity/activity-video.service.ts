@@ -1,5 +1,5 @@
 import * as activityBusinessType from './types';
-import { myMux } from '@/lib/mux';
+import { getMux } from '@/lib/mux';
 
 export class ActivityVideoService implements activityBusinessType.IActivityVideoService {
   constructor(
@@ -18,10 +18,10 @@ export class ActivityVideoService implements activityBusinessType.IActivityVideo
   async updateActivityVideo(activityId: string, videoUrl: string) {
     const muxData = await this.muxDataRepo.getActivityMuxData(activityId);
     if(muxData) {
-      // await myMux.Video.Assets.del(muxData.assetId);
+      // await getMux().Video.Assets.del(muxData.assetId);
       await this.muxDataRepo.deleteActivityMuxData(activityId);
     }
-    const asset = await myMux.Video.Assets.create({
+    const asset = await getMux().Video.Assets.create({
       input: videoUrl,
       playback_policy: "public",
       test: false,
@@ -41,7 +41,7 @@ export class ActivityVideoService implements activityBusinessType.IActivityVideo
   async deleteActivityVideo(activityId: string): Promise<void> {
     const muxData = await this.muxDataRepo.getActivityMuxData(activityId);
     if(muxData) {
-      await myMux.Video.Assets.del(muxData.assetId);
+      await getMux().Video.Assets.del(muxData.assetId);
       await this.muxDataRepo.deleteActivityMuxData(activityId);
     }
   }

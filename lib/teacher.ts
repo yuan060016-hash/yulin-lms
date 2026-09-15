@@ -1,3 +1,7 @@
-export const isTeacher = (userId?: string | null) => {
-  return userId === process.env.NEXT_PUBLIC_TEACHER_ID;
-}
+import { db } from "@/lib/db";
+
+export const isTeacher = async (userId?: string | null) => {
+  if (!userId) return false;
+  const user = await db.localUser.findUnique({ where: { id: userId }, select: { role: true } });
+  return user?.role === "TEACHER";
+};

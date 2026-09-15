@@ -1,6 +1,6 @@
 "use client";
 
-import { BarChart, Compass, Layout, List, ClipboardList } from "lucide-react";
+import { BarChart, Compass, Layout, List, Users } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 import { SidebarItem } from "./sidebar-item";
@@ -8,40 +8,37 @@ import { SidebarItem } from "./sidebar-item";
 const guestRoutes = [
   {
     icon: Layout,
-    label: "Dashboard",
+    label: "学习中心",
     href: "/",
   },
   {
     icon: Compass,
-    label: "Browse",
+    label: "课程目录",
     href: "/search",
   },
-  {
-    icon: ClipboardList,
-    label: "Create learning plans",
-    href: "/learning-plans/create-with-ai"
-  }
 ];
 
 const teacherRoutes = [
   {
     icon: List,
-    label: "Courses",
+    label: "课程管理",
     href: "/teacher/courses",
   },
   {
+    icon: Users,
+    label: "学员开通",
+    href: "/teacher/students",
+  },
+  {
     icon: BarChart,
-    label: "Analytics",
+    label: "数据概览",
     href: "/teacher/analytics",
-  }
-
-]
+  },
+];
 
 export const SidebarRoutes = () => {
   const pathname = usePathname();
-
   const isTeacherPage = pathname?.includes("/teacher");
-
   const routes = isTeacherPage ? teacherRoutes : guestRoutes;
 
   return (
@@ -55,5 +52,5 @@ export const SidebarRoutes = () => {
         />
       ))}
     </div>
-  )
-}
+  );
+};

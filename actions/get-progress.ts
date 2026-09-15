@@ -7,31 +7,39 @@ export const getProgress = async (
   try {
     const publishedChapters = await db.chapter.findMany({
       where: {
-        courseId: courseId,
+        courseId,
         isPublished: true,
       },
       select: {
         id: true,
-      }
-    });
-
-    const publishedChapterIds = publishedChapters.map((chapter) => chapter.id);
-
-    const validCompletedChapters = await db.userProgress.count({
-      where: {
-        userId: userId,
-        chapterId: {
-          in: publishedChapterIds,
+        activities: {
+          where: {
+            // count video/text/quiz activities
+          },
+          select: { id: true },
         },
-        isCompleted: true,
-      }
+      },
     });
 
-    const progressPercentage = (validCompletedChapters / publishedChapterIds.length) * 100;
+    const activityIds = publishedChapters
+      .flatMap((chapter) => chapter.activities)
+      .map((activity) => activity.id);
 
-    return progressPercentage;
+    if (activityIds.length === 0) {
+      return 0;
+    }
+
+    const completedCount = await db.userProgress.count({
+      where: {
+        userId,
+        activityId: { in: activityIds },
+        completedAt: { not: null },
+      },
+    });
+
+    return (completedCount / activityIds.length) * 100;
   } catch (error) {
     console.log("[GET_PROGRESS]", error);
     return 0;
   }
-}
+};

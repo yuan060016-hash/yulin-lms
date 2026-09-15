@@ -1,20 +1,17 @@
-import Mux from "@mux/mux-node";
-import { auth } from "@clerk/nextjs";
+
+import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
 
-const { Video } = new Mux(
-  process.env.MUX_TOKEN_ID!,
-  process.env.MUX_TOKEN_SECRET!,
-);
+
 
 export async function DELETE(
   req: Request,
   { params }: { params: { courseId: string; chapterId: string } }
 ) {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
 
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
@@ -95,7 +92,7 @@ export async function PATCH(
   { params }: { params: { courseId: string; chapterId: string } }
 ) {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
     const { isPublished, ...values } = await req.json();
 
     if (!userId) {

@@ -128,7 +128,7 @@ const CreateWithAIPage = () => {
         </DialogHeader>
         <DialogDescription>
           <Label>
-            Set learning plan's title
+            设置学习计划名称
           </Label>
           <Input className="mt-4" value={title} onChange={(e) => setTitle(e.target.value)} />
           {isSaving && <Banner className="mt-7" variant="info" label="Patient, your learning plan is being saved..." />}

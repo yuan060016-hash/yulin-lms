@@ -1,0 +1,192 @@
+datasource db {
+  provider     = "mysql"
+  url          = env("DATABASE_URL")
+  relationMode = "foreignKeys"
+}
+
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["fullTextSearch", "fullTextIndex"]
+}
+
+model Course {
+  id String @id @default(uuid())
+  userId String
+  title String @db.Text
+  description String? @db.Text
+  imageUrl String? @db.Text
+  price Float?
+  isPublished Boolean @default(false)
+
+  categoryId String?
+  category Category? @relation(fields: [categoryId], references: [id])
+
+  chapters Chapter[]
+  purchases Purchase[]
+
+  learningPlanStepCourses LearningPlanStepCourse[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lastIndexedAt DateTime? @db.DateTime
+
+  @@index([categoryId])
+  @@fulltext([title, description])
+}
+
+model Category {
+  id String @id @default(uuid())
+  name String @unique
+  courses Course[]
+}
+
+model Attachment {
+  id String @id @default(uuid())
+  name String
+  url String @db.Text
+
+  chapterId String
+  chapter Chapter @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([chapterId])
+}
+
+model Chapter {
+  id String @id @default(uuid())
+  title String
+  description String? @db.Text
+  videoUrl String? @db.Text
+  position Int
+  isPublished Boolean @default(false)
+  isFree Boolean @default(false)
+
+  courseId String
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  activities ChapterActivity[]
+
+  attachments Attachment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([courseId])
+}
+
+model ChapterActivity {
+  id String @id @default(uuid())
+  name String @db.Text
+  type String @db.Text
+  videoUrl String? @db.Text
+  position Int
+  textContent String? @db.LongText
+
+  quizData Json? @db.Json
+
+  chapterId String
+  chapter Chapter @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+
+  muxData MuxData[]
+
+  userProgress UserProgress[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MuxData {
+  id String @id @default(uuid())
+  assetId String
+  playbackId String?
+
+  activityId String?
+  activity ChapterActivity? @relation(fields: [activityId], references: [id], onDelete: Cascade)
+}
+
+model UserProgress {
+  id String @id @default(uuid())
+  userId String
+
+  activityId String?
+  activity ChapterActivity? @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  videoLastWatchedAt DateTime?
+  quizAttemptData Json? @db.Json
+
+  completedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([activityId])
+  @@unique([userId, activityId])
+}
+
+model Purchase {
+  id String @id @default(uuid())
+  userId String
+
+  courseId String
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  amount Float?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt()
+
+  @@unique([userId, courseId])
+  @@index([courseId])
+}
+
+model StripeCustomer {
+  id String @id @default(uuid())
+  userId String @unique
+  stripeCustomerId String @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model LearningPlan {
+  id String @id @default(uuid())
+  userId String
+  title String
+  description String? @db.Text
+
+  steps LearningPlanStep[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model LearningPlanStep {
+  id String @id @default(uuid())
+  description String
+  position Int
+
+  learningPlanId String
+  learningPlan LearningPlan @relation(fields: [learningPlanId], references: [id], onDelete: Cascade)
+
+  stepCourses LearningPlanStepCourse[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model LearningPlanStepCourse {
+  id String @id @default(uuid())
+  learningPlanStepId String
+  courseId String
+
+  learningPlanStep LearningPlanStep @relation(fields: [learningPlanStepId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([learningPlanStepId, courseId])
+}

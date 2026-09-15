@@ -59,7 +59,7 @@ const OnboardingPage = () => {
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center bg-gray-100">
-      <h3 className="text-xl font-semibold mb-4 mt-10">Let's create your first learning plan</h3>
+      <h3 className="text-xl font-semibold mb-4 mt-10">创建你的第一个学习计划</h3>
       <div className="w-full flex flex-col items-center">
         <Textarea
           value={inputValue}

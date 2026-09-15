@@ -1,0 +1,37 @@
+
+> lms-tutorial@0.1.0 dev
+> next dev
+
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+  ▲ Next.js 13.5.6
+  - Local:        http://localhost:3000
+  - Environments: .env
+
+ ✓ Ready in 6s
+ ✓ Compiled /middleware in 530ms (101 modules)
+ ○ Compiling /(auth)/(routes)/sign-in/[[...sign-in]]/page ...
+ ✓ Compiled /(auth)/(routes)/sign-in/[[...sign-in]]/page in 12.1s (810 modules)
+ ✓ Compiled in 240ms (371 modules)
+ ✓ Compiled in 124ms (371 modules)
+ ✓ Compiled /api/auth/login/route in 290ms (496 modules)
+ ✓ Compiled /(dashboard)/(routes)/(root)/page in 876ms (1161 modules)
+ ✓ Compiled /api/auth/me/route in 64ms (687 modules)
+ ✓ Compiled /(course)/courses/[courseId]/page in 233ms (1170 modules)
+ ✓ Compiled /(course)/courses/[courseId]/chapters/[chapterId]/activities/[activityId]/page in 960ms (1308 modules)
+ ✓ Compiled /api/video/tencent-psign/route in 82ms (767 modules)
+ ✓ Compiled in 127ms (740 modules)
+ ✓ Compiled /api/video/tencent-psign/route in 516ms (1319 modules)
+ ✓ Compiled in 392ms (1319 modules)
+ ✓ Compiled /favicon.ico/route in 111ms (762 modules)
+ ✓ Compiled (789 modules)
+ ✓ Compiled in 251ms (559 modules)
+ ✓ Compiled in 130ms (559 modules)
+   Reload env: .env
+ ✓ Compiled in 284ms (1385 modules)
+[?25h
+
+D:\codexshipinjiaoxue\LMS-clone>

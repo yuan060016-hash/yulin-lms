@@ -2,7 +2,7 @@
 
 import { CourseCard } from "@/components/course-card";
 import { Course } from "@prisma/client";
-import { useCallback, useContext, useMemo } from "react";
+import { useContext } from "react";
 import { ScrollMenu, VisibilityContext } from 'react-horizontal-scrolling-menu';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import './course-list-slider.css'
@@ -12,11 +12,7 @@ type CourseListSliderProps = {
   header?: React.ReactNode;
 }
 
-export const CourseListSlider = ({
-  items,
-  header,
-}: CourseListSliderProps) => {
-  const headerComponent = useCallback(() => {
+const SliderHeader = ({ items, header }: CourseListSliderProps) => {
     const visibility = useContext(VisibilityContext);
     const isFirstItemVisible = visibility.useIsVisible(items[0].id, false);
     const isLastItemVisible = visibility.useIsVisible(items[items.length - 1].id, false);
@@ -41,7 +37,13 @@ export const CourseListSlider = ({
         </div>
       </div>
     )
-  }, [header, items[0].id, items[items.length - 1].id])
+  };
+
+export const CourseListSlider = ({
+  items,
+  header,
+}: CourseListSliderProps) => {
+
   return (
     <>
       {items.length === 0 && (
@@ -50,7 +52,7 @@ export const CourseListSlider = ({
         </div>
       )}
       {items.length > 0 && (
-        <ScrollMenu Header={headerComponent} scrollContainerClassName="hide-scrollbar">
+        <ScrollMenu Header={<SliderHeader items={items} header={header} />} scrollContainerClassName="hide-scrollbar">
           {items.map((item) => {
             return (
               <div className="w-44 mr-2" key={item.id} {...{itemId: item.id}}>

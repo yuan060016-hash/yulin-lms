@@ -24,7 +24,7 @@ export const columns: ColumnDef<Course>[] = [
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Title
+          课程名称
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       )
@@ -38,16 +38,17 @@ export const columns: ColumnDef<Course>[] = [
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Price
+          价格
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       )
     },
     cell: ({ row }) => {
       const price = parseFloat(row.getValue("price") || "0");
-      const formatted = new Intl.NumberFormat("en-US", {
+      const formatted = new Intl.NumberFormat("zh-CN", {
         style: "currency",
-        currency: "USD"
+        currency: "CNY",
+        maximumFractionDigits: 0,
       }).format(price);
 
       return <div>{formatted}</div>
@@ -61,7 +62,7 @@ export const columns: ColumnDef<Course>[] = [
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Published
+          状态
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       )
@@ -74,7 +75,7 @@ export const columns: ColumnDef<Course>[] = [
           "bg-slate-500",
           isPublished && "bg-sky-700"
         )}>
-          {isPublished ? "Published" : "Draft"}
+          {isPublished ? "已发布" : "草稿"}
         </Badge>
       )
     }
@@ -88,7 +89,7 @@ export const columns: ColumnDef<Course>[] = [
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-4 w-8 p-0">
-              <span className="sr-only">Open menu</span>
+              <span className="sr-only">打开菜单</span>
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
@@ -96,7 +97,7 @@ export const columns: ColumnDef<Course>[] = [
             <Link href={`/teacher/courses/${id}`}>
               <DropdownMenuItem>
                 <Pencil className="h-4 w-4 mr-2" />
-                Edit
+                编辑
               </DropdownMenuItem>
             </Link>
           </DropdownMenuContent>

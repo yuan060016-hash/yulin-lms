@@ -23,17 +23,17 @@ export const CoursesList = ({
             key={item.id}
             id={item.id}
             title={item.title}
-            imageUrl={item.imageUrl!}
+            imageUrl={item.imageUrl || "https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=1200&q=80"}
             chaptersLength={item.chapters?.length}
-            price={item.price!}
-            progress={item.progress ?? 0}
-            category={item?.category?.name!}
+            price={item.price ?? 2980}
+            progress={item.progress}
+            category={item?.category?.name || "外贸实战"}
           />
         ))}
       </div>
       {items.length === 0 && (
         <div className="text-center text-sm text-muted-foreground mt-10">
-          No courses found
+          暂无已开通课程，请联系管理员开通后刷新页面
         </div>
       )}
     </div>

@@ -2,7 +2,7 @@ import * as activityAdapterType from '@/core/adapters/activity/types';
 import { Chapter, Course, MuxData } from '@prisma/client';
 
 export interface IChapterActivity extends activityAdapterType.IChapterActivity {};
-export interface ICreateActivityInput extends Exclude<activityAdapterType.ICreateActivityInput, 'position'> {
+export interface ICreateActivityInput extends Omit<activityAdapterType.ICreateActivityInput, 'position'> {
   userId: string;
   courseId: string;
 };

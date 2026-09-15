@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs";
+import { auth } from "@/lib/auth";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -17,7 +17,7 @@ const ActivityEditPage = async ({
 }: {
   params: { courseId: string; chapterId: string; activityId: string; }
 }) => {
-  const { userId } = auth();
+  const { userId } = await auth();
 
   if (!userId) {
     return redirect("/");
@@ -26,7 +26,8 @@ const ActivityEditPage = async ({
   const chapter = await db.chapter.findUnique({
     where: {
       id: params.chapterId,
-      courseId: params.courseId
+      courseId: params.courseId,
+      course: { userId },
     },
   });
 
@@ -35,7 +36,7 @@ const ActivityEditPage = async ({
   }
 
   const activity = await mainActivityService.getActivity(params.activityId, { includeVideoData: true });
-  if(!activity) {
+  if(!activity || activity.chapterId !== params.chapterId) {
     return redirect(`/teacher/courses/${params.courseId}/chapters/${params.chapterId}`)
   }
 
@@ -75,6 +76,7 @@ const ActivityEditPage = async ({
               activity={{
                 ...activity,
                 videoUrl: activity.videoUrl ?? undefined,
+                videoProvider: activity.videoProvider,
                 playbackId: activity.videoData?.playbackId ?? undefined,
               }}
             />

@@ -1,0 +1,12 @@
+import { PrismaClient } from "@prisma/client";
+import dotenv from "dotenv";
+dotenv.config();
+const db = new PrismaClient();
+const courseId = "5bab90cd-735d-44c5-9181-33b192014abe";
+const userId = process.env.NEXT_PUBLIC_TEACHER_ID;
+const belong = await db.course.count({ where: { id: courseId, userId } });
+const purchase = await db.purchase.findUnique({ where: { userId_courseId: { userId, courseId } } });
+const freeChapters = await db.chapter.count({ where: { courseId, isFree: true, isPublished: true } });
+const allChapters = await db.chapter.count({ where: { courseId, isPublished: true } });
+console.log({ belong: belong>0, purchase: !!purchase, freeChapters, allChapters, userId });
+await db.$disconnect();

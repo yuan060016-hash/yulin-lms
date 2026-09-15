@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { Loader2, Lock } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { CourseWatermark } from "@/components/video/course-watermark";
 import { useConfettiStore } from "@/hooks/use-confetti-store";
 
 interface VideoPlayerProps {
@@ -58,6 +59,7 @@ export const VideoPlayer = ({
 
   return (
     <div className="relative aspect-video">
+      <CourseWatermark />
       {!isReady && !isLocked && (
         <div className="absolute inset-0 flex items-center justify-center bg-slate-800">
           <Loader2 className="h-8 w-8 animate-spin text-secondary" />

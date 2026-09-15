@@ -1,5 +1,6 @@
 import { ApiError } from '@/core/error/api-error';
 import * as activityBusinessType from './types'
+import { isTeacher } from '@/lib/teacher';
 
 export class ActivityActionValidator implements activityBusinessType.IActivityActionValidator {
   constructor(
@@ -8,6 +9,7 @@ export class ActivityActionValidator implements activityBusinessType.IActivityAc
     private readonly activityRepo: Pick<activityBusinessType.IActivityRepo, 'getActivity'>,
   ) {}
   async validate(input: activityBusinessType.IActivityValidationInput, options?: activityBusinessType.IActivityValidationOptions | undefined): Promise<activityBusinessType.IActivityValidationResponse> {
+    if (!(await isTeacher(input.userId))) throw new ApiError({ message: '仅管理员可以编辑课程', statusCode: 403 });
     const chapter = await this.chapterRepo.read(input.chapterId);
     const course = await this.courseRepo.read(input.courseId);
     if (!chapter || !course) {

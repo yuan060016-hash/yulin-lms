@@ -16,7 +16,7 @@ export const QuizStarter = ({
       <div className="text-lg w-100 text-center p-10">
         <p>{questionCount} question{questionCount===1 ? '':'s'}</p>
         <p>No timer</p>
-        {score !== undefined && <p className="font-bold">Last attempt's score: {score}/{questionCount}</p>}
+        {score !== undefined && <p className="font-bold">上次得分： {score}/{questionCount}</p>}
       </div>
       <div className="w-100 text-center">
         <Button onClick={onStarted}>{typeof score === 'undefined' ? 'Get started' : 'Restart'} </Button>

@@ -2,10 +2,12 @@ import Stripe from "stripe";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 
-import { stripe } from "@/lib/stripe";
+
 import { db } from "@/lib/db";
 
 export async function POST(req: Request) {
+  if (process.env.ENABLE_PAYMENTS !== "true") return new NextResponse("在线支付暂未开放", { status: 403 });
+  const { stripe } = await import("@/lib/stripe");
   const body = await req.text();
   const signature = headers().get("Stripe-Signature") as string;
 

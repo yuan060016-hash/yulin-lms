@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs";
+import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
 import { db } from "@/lib/db";
@@ -17,10 +17,10 @@ type CoursePageProps = {
 const CoursesPage = async ({
   searchParams
 }: CoursePageProps) => {
-  const { userId } = auth();
+  const { userId } = await auth();
 
   if (!userId) {
-    return redirect("/");
+    return redirect("/sign-in");
   }
 
   const page = parseInt(searchParams?.page || "1", 10);

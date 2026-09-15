@@ -35,6 +35,7 @@ export const getChapter = async ({
     const chapter = await db.chapter.findUnique({
       where: {
         id: chapterId,
+        courseId,
         isPublished: true,
       }
     });
@@ -50,7 +51,7 @@ export const getChapter = async ({
     if (purchase) {
       attachments = await db.attachment.findMany({
         where: {
-          courseId: courseId
+          chapterId
         }
       });
     }
@@ -70,13 +71,9 @@ export const getChapter = async ({
       });
     }
 
-    const userProgress = await db.userProgress.findUnique({
-      where: {
-        userId_chapterId: {
-          userId,
-          chapterId,
-        }
-      }
+    const userProgress = await db.userProgress.findFirst({
+      where: { userId, activity: { chapterId } },
+      orderBy: { updatedAt: "desc" },
     });
 
     return {

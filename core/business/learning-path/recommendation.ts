@@ -1,7 +1,7 @@
 import { ApiError } from "@/core/error/api-error";
 import { db } from "@/lib/db";
-import { elasticsearchClient } from "@/lib/elasticsearch";
-import { openAI } from "@/lib/openai"
+
+
 import { AggregationsAggregate, SearchResponse } from "@elastic/elasticsearch/lib/api/types";
 import { Course } from "@prisma/client";
 import { ChatCompletionCreateParams } from 'openai/resources/index.mjs';
@@ -31,6 +31,10 @@ const constructRecommendationPrompt = (userQuery: string): ChatCompletionCreateP
 }
 
 export const recommendLearningPath = async (userQuery: string, params?: RecommendLearningPathParams) => {
+  if (!process.env.OPENAI_API_KEY || !process.env.ELASTIC_PASSWORD) {
+    throw new ApiError({ message: "AI 学习推荐暂未启用", statusCode: 503 });
+  }
+  const [{ openAI }, { elasticsearchClient }] = await Promise.all([import("@/lib/openai"), import("@/lib/elasticsearch")]);
   const prompt = constructRecommendationPrompt(userQuery)
   const response = await openAI.chat.completions.create({
     model: 'gpt-3.5-turbo-0125',

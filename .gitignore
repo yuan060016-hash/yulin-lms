@@ -36,6 +36,10 @@ yarn-error.log*
 next-env.d.ts
 
 __data__
+backups/
+prisma/*.db
+prisma/*.db-*
+local-review-server*.log
 
 
 # terraform
@@ -44,3 +48,11 @@ elasticsearch/tf-local/local.tfvars
 .terraform
 terraform.tfstate
 terraform.tfstate.backup
+.env.*
+!.env.example
+.supabase-db-password.txt
+data/sqlite-export.json
+prisma/dev.db
+.netlify
+
+.env.netlify

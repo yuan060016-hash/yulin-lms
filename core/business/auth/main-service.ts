@@ -1,11 +1,11 @@
-import { auth } from '@clerk/nextjs';
-import * as authBusinessType from './types';
+import { auth } from '@/lib/auth';
+import type * as authType from './types';
 
 export class MainAuthService {
-  async getAuthContext(input: authBusinessType.IGetAuthContextInput): Promise<authBusinessType.IAuthContext> {
-    const { userId } = auth();
+  async getAuthContext(input: authType.IGetAuthContextInput): Promise<authType.IAuthContext> {
+    const { userId } = await auth();
     return {
-      userId
+      userId,
     }
   }
 }

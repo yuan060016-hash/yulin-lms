@@ -3,6 +3,7 @@ import { ApiError } from "@/core/error/api-error";
 import { routeErrorHandler } from "@/core/error/error-hander";
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
+import { getLessonAccess } from "@/lib/lesson-access";
 
 
 export const POST = routeErrorHandler(
@@ -19,7 +20,12 @@ export const POST = routeErrorHandler(
       })
     }
 
+    const access = await getLessonAccess(userId, params);
+    if (!access || !access.available) return NextResponse.json({ message: "课时不存在或已下架" }, { status: 404 });
+    if (!access.allowed) return NextResponse.json({ message: "课程尚未开通" }, { status: 403 });
+    if (access.activity.type !== "quiz") return NextResponse.json({ message: "此课时不是测验" }, { status: 400 });
     const { isCompleted, quizData } = await req.json();
+    if (typeof isCompleted !== "boolean") return NextResponse.json({ message: "完成状态格式不正确" }, { status: 400 });
 
     const updatedData = await db.userProgress.upsert({
       where: {
@@ -32,11 +38,11 @@ export const POST = routeErrorHandler(
         userId,
         activityId: params.activityId,
         completedAt: isCompleted ? new Date() : null,
-        quizAttemptData: quizData
+        quizAttemptData: JSON.stringify(quizData ?? null)
       },
       update: {
         completedAt: isCompleted ? new Date() : null,
-        quizAttemptData: quizData
+        quizAttemptData: JSON.stringify(quizData ?? null)
       }
     })
     
