@@ -14,6 +14,14 @@ async function fetchPlayInfo(appId: string, fileId: string, psign: string) {
   return infoRes.json();
 }
 
+function pickAdaptiveUrl(info: any): string | null {
+  return (
+    info?.media?.streamingInfo?.plainOutput?.url ||
+    info?.media?.adaptiveDynamicStreamingInfo?.adaptiveDynamicStreamingList?.[0]?.url ||
+    null
+  );
+}
+
 export async function GET(req: Request) {
   const { userId } = await auth();
   if (!userId) {
@@ -58,7 +66,8 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "vod not configured" }, { status: 500 });
   }
 
-  const useAdaptive = process.env.TENCENT_VOD_USE_ADAPTIVE === "true";
+  // Prefer adaptive HLS; fall back to original MP4 when adaptive is unavailable.
+  const preferAdaptive = process.env.TENCENT_VOD_USE_ADAPTIVE !== "false";
   const adaptiveDefinition = Number(process.env.TENCENT_VOD_ADAPTIVE_DEFINITION || "10");
 
   let playUrl: string | null = null;
@@ -67,7 +76,7 @@ export async function GET(req: Request) {
   let psign = "";
 
   try {
-    if (useAdaptive) {
+    if (preferAdaptive) {
       psign = await createTencentVodPsign({
         appId,
         fileId,
@@ -79,10 +88,7 @@ export async function GET(req: Request) {
         },
       });
       const info = await fetchPlayInfo(appId, fileId, psign);
-      const adaptiveUrl =
-        info?.media?.adaptiveDynamicStreamingInfo?.adaptiveDynamicStreamingList?.[0]?.url ||
-        info?.media?.streamingInfo?.plainOutput?.url ||
-        null;
+      const adaptiveUrl = pickAdaptiveUrl(info);
       if (info?.code === 0 && adaptiveUrl) {
         playUrl = toHttpsVodPlayUrl(adaptiveUrl, appId);
         coverUrl = info?.media?.basicInfo?.coverUrl || null;
