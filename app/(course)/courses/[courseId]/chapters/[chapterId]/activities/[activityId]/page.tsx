@@ -1,11 +1,13 @@
-﻿import { notFound, redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { db } from "@/lib/db";
-import { getLessonAccess } from "@/lib/lesson-access";
+import { getLessonAccess, getNextLesson } from "@/lib/lesson-access";
 import { resolvePlaybackSource } from "@/lib/video/provider";
 import { ActivityVideoPlayer } from "./_components/video-player";
 import { LessonCompletion } from "./_components/lesson-completion";
 import { CourseNavLink } from "@/components/course-nav-link";
+
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 export default async function ActivityPage({
   params,
@@ -27,20 +29,13 @@ export default async function ActivityPage({
     externalUrl: activity.videoProvider === "external-url" ? activity.videoUrl : null,
   });
 
-  const chapters = await db.chapter.findMany({
-    where: { courseId: params.courseId, isPublished: true },
-    orderBy: { position: "asc" },
-    select: {
-      activities: {
-        orderBy: { position: "asc" },
-        select: { id: true, chapterId: true, name: true },
-      },
-    },
+  const next = await getNextLesson(params.courseId, {
+    id: activity.id,
+    chapterId: activity.chapter.id,
+    chapterPosition: activity.chapter.position,
+    position: activity.position,
   });
 
-  const lessons = chapters.flatMap((c) => c.activities);
-  const currentIndex = lessons.findIndex((a) => a.id === activity.id);
-  const next = currentIndex >= 0 ? lessons[currentIndex + 1] : undefined;
   const progressUrl = `/api/courses/${params.courseId}/chapters/${params.chapterId}/activities/${params.activityId}/progress`;
   const completed = !!activity.userProgress[0]?.completedAt;
   const isVideo = String(activity.type || "").toLowerCase() === "video";

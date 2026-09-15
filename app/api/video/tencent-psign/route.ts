@@ -6,6 +6,21 @@ import { createTencentVodPsign, toHttpsVodPlayUrl } from "@/lib/video/tencent-ps
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+type CachedPlay = {
+  expiresAt: number;
+  payload: {
+    psign: string;
+    appId: string;
+    fileId: string;
+    playUrl: string | null;
+    coverUrl: string | null;
+    mode: "adaptive" | "original";
+  };
+};
+
+const playCache = new Map<string, CachedPlay>();
+const CACHE_TTL_MS = 45_000;
+
 async function fetchPlayInfo(appId: string, fileId: string, psign: string) {
   const infoRes = await fetch(
     `https://playvideo.qcloud.com/getplayinfo/v4/${appId}/${fileId}?psign=${encodeURIComponent(psign)}`,
@@ -35,14 +50,25 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "missing params" }, { status: 400 });
   }
 
+  const cacheKey = `${userId}:${fileId}:${activityId}`;
+  const cached = playCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) {
+    return NextResponse.json(cached.payload, {
+      headers: { "Cache-Control": "private, max-age=30" },
+    });
+  }
+
   const activity = await db.chapterActivity.findUnique({
     where: { id: activityId },
-    include: {
+    select: {
+      videoUrl: true,
+      videoProvider: true,
       chapter: {
-        include: {
+        select: {
           course: {
-            include: {
-              purchases: { where: { userId }, select: { id: true } },
+            select: {
+              userId: true,
+              purchases: { where: { userId }, select: { id: true }, take: 1 },
             },
           },
         },
@@ -66,7 +92,6 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "vod not configured" }, { status: 500 });
   }
 
-  // Prefer adaptive HLS; fall back to original MP4 when adaptive is unavailable.
   const preferAdaptive = process.env.TENCENT_VOD_USE_ADAPTIVE !== "false";
   const adaptiveDefinition = Number(process.env.TENCENT_VOD_ADAPTIVE_DEFINITION || "10");
 
@@ -120,12 +145,18 @@ export async function GET(req: Request) {
     });
   }
 
-  return NextResponse.json(
-    { psign, appId, fileId, playUrl, coverUrl, mode },
-    {
-      headers: {
-        "Cache-Control": "private, max-age=30",
-      },
-    }
-  );
+  const payload = { psign, appId, fileId, playUrl, coverUrl, mode };
+  playCache.set(cacheKey, { expiresAt: Date.now() + CACHE_TTL_MS, payload });
+
+  // Prevent unbounded growth in long-lived isolates.
+  if (playCache.size > 200) {
+    const now = Date.now();
+    Array.from(playCache.entries()).forEach(([key, value]) => {
+      if (value.expiresAt <= now) playCache.delete(key);
+    });
+  }
+
+  return NextResponse.json(payload, {
+    headers: { "Cache-Control": "private, max-age=30" },
+  });
 }

@@ -2,7 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { BookOpen } from "lucide-react";
+import { useTransition } from "react";
 
 import { IconBadge } from "@/components/icon-badge";
 import { formatPrice } from "@/lib/format";
@@ -18,6 +20,11 @@ interface CourseCardProps {
   category?: string;
 }
 
+function preferHardNavigation() {
+  if (typeof window === "undefined") return false;
+  return window.matchMedia("(max-width: 768px), (hover: none)").matches;
+}
+
 export const CourseCard = ({
   id,
   title,
@@ -27,6 +34,8 @@ export const CourseCard = ({
   progress,
   category,
 }: CourseCardProps) => {
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
   const enrolled = progress !== null && progress !== undefined;
   const isFacebook = /facebook/i.test(title) || category === "Facebook获客";
   const isLocal = imageUrl.startsWith("/");
@@ -35,6 +44,9 @@ export const CourseCard = ({
   return (
     <Link
       href={href}
+      prefetch={!preferHardNavigation()}
+      aria-busy={pending || undefined}
+      className={pending ? "opacity-80" : undefined}
       onClick={(event) => {
         if (
           event.defaultPrevented ||
@@ -47,7 +59,11 @@ export const CourseCard = ({
           return;
         }
         event.preventDefault();
-        window.location.assign(href);
+        if (preferHardNavigation()) {
+          window.location.assign(href);
+          return;
+        }
+        startTransition(() => router.push(href));
       }}
     >
       <div
