@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import Hls from "hls.js";
 
 type Props = {
   fileId: string;
@@ -19,7 +18,7 @@ export function TencentVodPlayer({ fileId, appId, activityId, onEnded, onError }
   const reactId = useId().replace(/:/g, "");
   const videoId = `tcplayer-${reactId}`;
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const hlsRef = useRef<Hls | null>(null);
+  const hlsRef = useRef<any>(null);
   const [ready, setReady] = useState(false);
   const [status, setStatus] = useState("正在获取播放地址...");
   const [playUrl, setPlayUrl] = useState<string | null>(null);
@@ -77,46 +76,72 @@ export function TencentVodPlayer({ fileId, appId, activityId, onEnded, onError }
     setStatus("视频缓冲中，请稍候...");
 
     if (hlsRef.current) {
-      hlsRef.current.destroy();
+      try { hlsRef.current.destroy(); } catch {}
       hlsRef.current = null;
     }
 
-    if (isHlsUrl(playUrl)) {
-      if (Hls.isSupported()) {
-        const hls = new Hls({
-          enableWorker: true,
-          lowLatencyMode: false,
-          backBufferLength: 30,
-          maxBufferLength: 30,
-        });
-        hlsRef.current = hls;
-        hls.loadSource(playUrl);
-        hls.attachMedia(video);
-        hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          if (!disposed) setStatus("");
-        });
-        hls.on(Hls.Events.ERROR, (_event, data) => {
+    async function attach() {
+      try {
+        if (isHlsUrl(playUrl!)) {
+          const HlsModule = await import("hls.js");
+          const Hls: any = (HlsModule as any).default || HlsModule;
           if (disposed) return;
-          if (data.fatal) {
-            setStatus("播放失败，请刷新重试");
-            onError?.();
+
+          if (Hls.isSupported()) {
+            const hls = new Hls({
+              enableWorker: true,
+              lowLatencyMode: false,
+              backBufferLength: 30,
+              maxBufferLength: 30,
+            });
+            hlsRef.current = hls;
+            hls.loadSource(playUrl!);
+            hls.attachMedia(video!);
+            hls.on(Hls.Events.MANIFEST_PARSED, () => {
+              if (!disposed) setStatus("");
+            });
+            hls.on(Hls.Events.ERROR, (_event: unknown, data: any) => {
+              if (disposed) return;
+              if (data?.fatal) {
+                setStatus("播放失败，请刷新重试");
+                onError?.();
+              }
+            });
+            return;
           }
-        });
-      } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-        video.src = playUrl;
-      } else {
-        setStatus("当前浏览器不支持该视频格式");
-        onError?.();
+
+          if (video!.canPlayType("application/vnd.apple.mpegurl")) {
+            video!.src = playUrl!;
+            return;
+          }
+
+          setStatus("当前浏览器不支持该视频格式");
+          onError?.();
+          return;
+        }
+
+        video!.src = playUrl!;
+      } catch {
+        if (!disposed) {
+          setStatus("播放器初始化失败，请刷新重试");
+          onError?.();
+        }
       }
-    } else {
-      video.src = playUrl;
     }
+
+    attach();
 
     return () => {
       disposed = true;
       if (hlsRef.current) {
-        hlsRef.current.destroy();
+        try { hlsRef.current.destroy(); } catch {}
         hlsRef.current = null;
+      }
+      if (video) {
+        try {
+          video.removeAttribute("src");
+          video.load();
+        } catch {}
       }
     };
   }, [playUrl, onError]);
@@ -136,7 +161,7 @@ export function TencentVodPlayer({ fileId, appId, activityId, onEnded, onError }
         controlsList="nodownload noplaybackrate"
         disablePictureInPicture
         playsInline
-        preload="auto"
+        preload="metadata"
         onLoadedData={() => setStatus("")}
         onCanPlay={() => setStatus("")}
         onWaiting={() => setStatus("缓冲中...")}

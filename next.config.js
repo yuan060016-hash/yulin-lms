@@ -8,7 +8,9 @@ const nextConfig = {
       "images.unsplash.com",
       "st2.depositphotos.com"
     ]
-  }
+  },
+  reactStrictMode: true,
+  poweredByHeader: false,
 }
 
 module.exports = nextConfig

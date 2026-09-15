@@ -5,6 +5,9 @@ import { db } from "@/lib/db";
 import { NavbarRoutes } from "@/components/navbar-routes";
 import { CourseProgress } from "@/components/course-progress";
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 export default async function CourseLayout({ children, params }: {
   children: React.ReactNode; params: { courseId: string };
 }) {

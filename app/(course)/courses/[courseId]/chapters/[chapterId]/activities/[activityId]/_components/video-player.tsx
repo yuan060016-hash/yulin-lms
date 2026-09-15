@@ -1,9 +1,8 @@
-﻿"use client";
+"use client";
 
 import dynamic from "next/dynamic";
-import { useCallback, useState } from "react";
+import { Component, useCallback, useState, type ReactNode } from "react";
 import { CourseWatermark } from "@/components/video/course-watermark";
-import { TencentVodPlayer } from "@/components/video/tencent-vod-player";
 import { LessonCompletion } from "./lesson-completion";
 
 const MuxPlayer = dynamic(() => import("@mux/mux-player-react"), {
@@ -14,6 +13,44 @@ const MuxPlayer = dynamic(() => import("@mux/mux-player-react"), {
     </div>
   ),
 });
+
+const TencentVodPlayer = dynamic(
+  () => import("@/components/video/tencent-vod-player").then((m) => m.TencentVodPlayer),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-full items-center justify-center text-sm text-slate-300">
+        播放器加载中...
+      </div>
+    ),
+  }
+);
+
+class PlayerErrorBoundary extends Component<
+  { children: ReactNode; onError?: () => void },
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch() {
+    this.props.onError?.();
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex h-full items-center justify-center p-6 text-center text-sm text-slate-300">
+          播放器异常，请刷新页面后重试。
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 type Props = {
   activityId?: string;
@@ -50,42 +87,44 @@ export const ActivityVideoPlayer = ({
     <div>
       <div className="relative aspect-video w-full overflow-hidden rounded-md bg-slate-900">
         <CourseWatermark />
-        {provider === "mux" && playbackId ? (
-          <MuxPlayer
-            playbackId={playbackId}
-            className="h-full w-full"
-            onEnded={onEnded}
-            onError={onError}
-          />
-        ) : null}
-        {provider === "tencent-vod" && fileId && appId ? (
-          <TencentVodPlayer
-            fileId={fileId}
-            appId={appId}
-            activityId={activityId}
-            onEnded={onEnded}
-            onError={onError}
-          />
-        ) : null}
-        {provider === "external-url" && signedUrl ? (
-          <video
-            className="h-full w-full"
-            src={signedUrl}
-            controls
-            controlsList="nodownload"
-            disablePictureInPicture
-            playsInline
-            preload="metadata"
-            onEnded={onEnded}
-            onError={onError}
-            onContextMenu={(e) => e.preventDefault()}
-          />
-        ) : null}
-        {!hasVideo ? (
-          <div className="flex h-full items-center justify-center p-6 text-sm text-slate-300">
-            本节视频即将上线，请稍后再来学习。
-          </div>
-        ) : null}
+        <PlayerErrorBoundary onError={onError}>
+          {provider === "mux" && playbackId ? (
+            <MuxPlayer
+              playbackId={playbackId}
+              className="h-full w-full"
+              onEnded={onEnded}
+              onError={onError}
+            />
+          ) : null}
+          {provider === "tencent-vod" && fileId && appId ? (
+            <TencentVodPlayer
+              fileId={fileId}
+              appId={appId}
+              activityId={activityId}
+              onEnded={onEnded}
+              onError={onError}
+            />
+          ) : null}
+          {provider === "external-url" && signedUrl ? (
+            <video
+              className="h-full w-full"
+              src={signedUrl}
+              controls
+              controlsList="nodownload"
+              disablePictureInPicture
+              playsInline
+              preload="metadata"
+              onEnded={onEnded}
+              onError={onError}
+              onContextMenu={(e) => e.preventDefault()}
+            />
+          ) : null}
+          {!hasVideo ? (
+            <div className="flex h-full items-center justify-center p-6 text-sm text-slate-300">
+              本节视频即将上线，请稍后再来学习。
+            </div>
+          ) : null}
+        </PlayerErrorBoundary>
       </div>
       {error ? (
         <p role="alert" className="mt-2 text-sm text-red-600">

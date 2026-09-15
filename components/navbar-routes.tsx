@@ -16,10 +16,34 @@ type MeUser = {
   name?: string | null;
 };
 
+let cachedUser: MeUser | null | undefined;
+let inflight: Promise<MeUser | null> | null = null;
+
+async function fetchMe(force = false): Promise<MeUser | null> {
+  if (!force && cachedUser !== undefined) return cachedUser;
+  if (!force && inflight) return inflight;
+
+  inflight = axios
+    .get("/api/auth/me")
+    .then((res) => {
+      cachedUser = res.data.user || null;
+      return cachedUser;
+    })
+    .catch(() => {
+      cachedUser = null;
+      return null;
+    })
+    .finally(() => {
+      inflight = null;
+    });
+
+  return inflight;
+}
+
 export const NavbarRoutes = () => {
   const pathname = usePathname();
   const router = useRouter();
-  const [user, setUser] = useState<MeUser | null>(null);
+  const [user, setUser] = useState<MeUser | null>(cachedUser ?? null);
 
   const isTeacherPage = pathname?.startsWith("/teacher");
   const isCoursePage = pathname?.includes("/courses");
@@ -27,14 +51,21 @@ export const NavbarRoutes = () => {
   const canTeach = user?.role === "TEACHER";
 
   useEffect(() => {
-    axios
-      .get("/api/auth/me")
-      .then((res) => setUser(res.data.user))
-      .catch(() => setUser(null));
-  }, [pathname]);
+    let alive = true;
+    fetchMe(false).then((me) => {
+      if (alive) setUser(me);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const logout = async () => {
-    await axios.post("/api/auth/logout");
+    try {
+      await axios.post("/api/auth/logout");
+    } catch {}
+    cachedUser = null;
+    setUser(null);
     router.replace("/sign-in");
     router.refresh();
   };
