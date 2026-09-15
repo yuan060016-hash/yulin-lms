@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { NavbarRoutes } from "@/components/navbar-routes";
 import { CourseProgress } from "@/components/course-progress";
+import { CourseNavLink } from "@/components/course-nav-link";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -33,12 +34,12 @@ export default async function CourseLayout({ children, params }: {
       <CourseProgress value={progress} size="sm" />
       <nav aria-label="课程目录" className="space-y-1">
         {course.chapters.map(chapter => <div key={chapter.id}>
-          {chapter.activities.map((activity, index) => <Link key={activity.id}
+          {chapter.activities.map((activity, index) => <CourseNavLink key={activity.id}
             href={`/courses/${course.id}/chapters/${chapter.id}/activities/${activity.id}`}
             className="flex items-start gap-2 rounded-md px-2 py-2 text-sm text-slate-700 hover:bg-sky-50 hover:text-sky-800">
             <span aria-label={activity.userProgress[0]?.completedAt ? "已完成" : "未完成"} className="text-emerald-700">{activity.userProgress[0]?.completedAt ? "✓" : "○"}</span>
-            <span>{index === 0 ? chapter.title : activity.name}</span>
-          </Link>)}
+            <span className="flex-1">{index === 0 ? chapter.title : activity.name}</span>
+          </CourseNavLink>)}
         </div>)}
       </nav>
     </> : <p className="rounded bg-amber-50 p-3 text-sm text-amber-800">请联系管理员开通后学习</p>}
