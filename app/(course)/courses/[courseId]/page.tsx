@@ -1,4 +1,4 @@
-import { notFound, redirect } from "next/navigation";
+﻿import { notFound, redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,12 @@ const CourseIdPage = async ({
         include: {
           activities: {
             orderBy: { position: "asc" },
-            include: { userProgress: { where: { userId }, select: { completedAt: true } } },
+            include: {
+              userProgress: {
+                where: { userId },
+                select: { completedAt: true },
+              },
+            },
           },
         },
       },
@@ -35,34 +40,40 @@ const CourseIdPage = async ({
   if (!course || (!course.isPublished && course.userId !== userId)) notFound();
 
   const isPurchased = course.purchases.length > 0 || course.userId === userId;
-  const remaining = course.chapters.flatMap(chapter => chapter.activities.map(activity => ({ chapter, activity })))
-    .find(item => !item.activity.userProgress[0]?.completedAt);
+  const remaining = course.chapters
+    .flatMap((chapter) => chapter.activities.map((activity) => ({ chapter, activity })))
+    .find((item) => !item.activity.userProgress[0]?.completedAt);
   const firstChapter = remaining?.chapter || course.chapters[0];
   const firstActivity = remaining?.activity || firstChapter?.activities?.[0];
 
-  // Auto enter first lesson when purchased
   if (isPurchased && firstChapter && firstActivity) {
     redirect(
       `/courses/${course.id}/chapters/${firstChapter.id}/activities/${firstActivity.id}`
     );
   }
 
+  const cover =
+    course.imageUrl ||
+    (/facebook/i.test(course.title)
+      ? "/course-covers/facebook-lead-gen.jpg"
+      : "https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=1200&q=80");
+
   return (
     <div className="mx-auto max-w-3xl p-6">
       <div className="overflow-hidden rounded-xl border bg-white shadow-sm">
-        {course.imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={course.imageUrl} alt={course.title} className="h-56 w-full object-cover" />
-        ) : null}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={cover} alt={course.title} className="h-56 w-full object-cover" />
         <div className="space-y-4 p-6">
           <h1 className="text-2xl font-semibold text-slate-800">{course.title}</h1>
           <p className="text-sm leading-6 text-slate-600">
-            {course.description || "外贸实战系统课程，覆盖获客、沟通、成交与风控。"}
+            {course.description || "课程内容将帮助你系统学习外贸获客与成交方法。"}
           </p>
           <div className="text-sm text-slate-500">课程价格：¥{course.price ?? 2980}</div>
           {isPurchased ? (
             firstChapter && firstActivity ? (
-              <Link href={`/courses/${course.id}/chapters/${firstChapter.id}/activities/${firstActivity.id}`}>
+              <Link
+                href={`/courses/${course.id}/chapters/${firstChapter.id}/activities/${firstActivity.id}`}
+              >
                 <Button className="bg-sky-700 hover:bg-sky-800">开始学习</Button>
               </Link>
             ) : (

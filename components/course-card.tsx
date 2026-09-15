@@ -27,6 +27,7 @@ export const CourseCard = ({
 }: CourseCardProps) => {
   const enrolled = progress !== null && progress !== undefined;
   const isFacebook = /facebook/i.test(title) || category === "Facebook获客";
+  const isLocal = imageUrl.startsWith("/");
 
   return (
     <Link href={`/courses/${id}`}>
@@ -35,8 +36,16 @@ export const CourseCard = ({
           isFacebook ? "border-indigo-200 bg-indigo-50/40" : "border-slate-200 bg-white"
         }`}
       >
-        <div className="relative aspect-video w-full overflow-hidden rounded-md">
-          <Image fill className="object-cover" alt={title} src={imageUrl} />
+        <div className="relative aspect-video w-full overflow-hidden rounded-md bg-slate-100">
+          <Image
+            fill
+            className="object-cover"
+            alt={title}
+            src={imageUrl}
+            sizes="(max-width: 768px) 100vw, 33vw"
+            priority={false}
+            unoptimized={isLocal}
+          />
           <div
             className={`absolute left-2 top-2 rounded-full px-2 py-0.5 text-[11px] font-medium text-white ${
               isFacebook ? "bg-indigo-600" : "bg-sky-700"
