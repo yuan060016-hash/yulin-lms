@@ -16,7 +16,7 @@ type MeUser = {
   name?: string | null;
 };
 
-let cachedUser: MeUser | null | undefined;
+let cachedUser: MeUser | null | undefined = undefined;
 let inflight: Promise<MeUser | null> | null = null;
 
 async function fetchMe(force = false): Promise<MeUser | null> {
@@ -26,8 +26,9 @@ async function fetchMe(force = false): Promise<MeUser | null> {
   inflight = axios
     .get("/api/auth/me")
     .then((res) => {
-      cachedUser = res.data.user || null;
-      return cachedUser;
+      const nextUser = (res.data?.user as MeUser | null) || null;
+      cachedUser = nextUser;
+      return nextUser;
     })
     .catch(() => {
       cachedUser = null;
