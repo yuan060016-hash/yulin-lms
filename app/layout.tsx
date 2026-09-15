@@ -1,17 +1,9 @@
-﻿import './globals.css'
+import './globals.css'
 import type { Metadata } from 'next'
-import dynamic from 'next/dynamic'
 import { ToastProvider } from '@/components/providers/toaster-provider'
+import { ConfettiProvider } from '@/components/providers/confetti-provider'
 import { AntdRegistry } from '@ant-design/nextjs-registry'
 import 'react-horizontal-scrolling-menu/dist/styles.css'
-
-const ConfettiProvider = dynamic(
-  () =>
-    import('@/components/providers/confetti-provider').then(
-      (m) => m.ConfettiProvider
-    ),
-  { ssr: false }
-)
 
 export const metadata: Metadata = {
   title: '雨林外贸实战课程',
@@ -27,8 +19,8 @@ export default function RootLayout({
     <html lang="zh-CN">
       <head>
         <link rel="dns-prefetch" href="//1395361200.vod-qcloud.com" />
-        <link rel="preconnect" href="https://1395361200.vod-qcloud.com" crossOrigin="" />
-        <link rel="dns-prefetch" href="//web.sdk.qcloud.com" />
+        <link rel="preconnect" href="https://1395361200.vod-qcloud.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="//playvideo.qcloud.com" />
       </head>
       <body className="min-h-screen bg-slate-50 font-sans antialiased">
         <ConfettiProvider />

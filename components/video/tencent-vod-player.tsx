@@ -1,12 +1,6 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-
-declare global {
-  interface Window {
-    TCPlayer?: any;
-  }
-}
 
 type Props = {
   fileId: string;
@@ -26,6 +20,7 @@ export function TencentVodPlayer({ fileId, appId, activityId, onEnded, onError }
 
   useEffect(() => {
     let disposed = false;
+    const controller = new AbortController();
 
     async function setup() {
       try {
@@ -38,7 +33,7 @@ export function TencentVodPlayer({ fileId, appId, activityId, onEnded, onError }
         setStatus("正在获取播放地址...");
         const res = await fetch(
           `/api/video/tencent-psign?fileId=${encodeURIComponent(fileId)}&activityId=${encodeURIComponent(activityId)}`,
-          { cache: "no-store" }
+          { cache: "no-store", signal: controller.signal }
         );
         if (!res.ok) throw new Error("psign failed");
         const data = await res.json();
@@ -54,17 +49,17 @@ export function TencentVodPlayer({ fileId, appId, activityId, onEnded, onError }
         setPlayUrl(url);
         setStatus("视频缓冲中，请稍候...");
         setReady(true);
-      } catch {
-        if (!disposed) {
-          setStatus("视频加载失败，请刷新重试");
-          onError?.();
-        }
+      } catch (error) {
+        if (disposed || (error instanceof DOMException && error.name === "AbortError")) return;
+        setStatus("视频加载失败，请刷新重试");
+        onError?.();
       }
     }
 
     setup();
     return () => {
       disposed = true;
+      controller.abort();
     };
   }, [fileId, appId, activityId, onError]);
 
@@ -85,8 +80,9 @@ export function TencentVodPlayer({ fileId, appId, activityId, onEnded, onError }
           controlsList="nodownload noplaybackrate"
           disablePictureInPicture
           playsInline
-          preload="metadata"
+          preload="auto"
           onLoadedData={() => setStatus("")}
+          onCanPlay={() => setStatus("")}
           onWaiting={() => setStatus("缓冲中...")}
           onPlaying={() => setStatus("")}
           onEnded={() => onEnded?.()}
