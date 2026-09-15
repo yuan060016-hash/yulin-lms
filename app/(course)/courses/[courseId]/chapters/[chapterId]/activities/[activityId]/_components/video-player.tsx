@@ -1,10 +1,19 @@
-"use client";
+﻿"use client";
 
+import dynamic from "next/dynamic";
 import { useCallback, useState } from "react";
-import MuxPlayer from "@mux/mux-player-react";
 import { CourseWatermark } from "@/components/video/course-watermark";
 import { TencentVodPlayer } from "@/components/video/tencent-vod-player";
 import { LessonCompletion } from "./lesson-completion";
+
+const MuxPlayer = dynamic(() => import("@mux/mux-player-react"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-full items-center justify-center text-sm text-slate-300">
+      播放器加载中...
+    </div>
+  ),
+});
 
 type Props = {
   activityId?: string;

@@ -1,4 +1,4 @@
-import { notFound, redirect } from "next/navigation";
+﻿import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -7,14 +7,18 @@ import { resolvePlaybackSource } from "@/lib/video/provider";
 import { ActivityVideoPlayer } from "./_components/video-player";
 import { LessonCompletion } from "./_components/lesson-completion";
 
-export default async function ActivityPage({ params }: {
+export default async function ActivityPage({
+  params,
+}: {
   params: { courseId: string; chapterId: string; activityId: string };
 }) {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
+
   const access = await getLessonAccess(userId, params);
   if (!access || !access.available) notFound();
   if (!access.allowed) redirect(`/courses/${params.courseId}`);
+
   const { activity } = access;
   const playback = resolvePlaybackSource({
     provider: activity.videoProvider,
@@ -22,31 +26,60 @@ export default async function ActivityPage({ params }: {
     tencentFileId: activity.videoProvider === "tencent-vod" ? activity.videoUrl : null,
     externalUrl: activity.videoProvider === "external-url" ? activity.videoUrl : null,
   });
+
   const chapters = await db.chapter.findMany({
-    where: { courseId: params.courseId, isPublished: true }, orderBy: { position: "asc" },
-    select: { activities: { orderBy: { position: "asc" }, select: { id: true, chapterId: true, name: true } } },
+    where: { courseId: params.courseId, isPublished: true },
+    orderBy: { position: "asc" },
+    select: {
+      activities: {
+        orderBy: { position: "asc" },
+        select: { id: true, chapterId: true, name: true },
+      },
+    },
   });
-  const lessons = chapters.flatMap(c => c.activities);
-  const currentIndex = lessons.findIndex(a => a.id === activity.id);
+
+  const lessons = chapters.flatMap((c) => c.activities);
+  const currentIndex = lessons.findIndex((a) => a.id === activity.id);
   const next = currentIndex >= 0 ? lessons[currentIndex + 1] : undefined;
   const progressUrl = `/api/courses/${params.courseId}/chapters/${params.chapterId}/activities/${params.activityId}/progress`;
   const completed = !!activity.userProgress[0]?.completedAt;
+  const isVideo = String(activity.type || "").toLowerCase() === "video";
+
   return (
     <div className="mx-auto max-w-5xl p-4 md:p-6">
       <div className="mb-4">
         <div className="text-xs text-slate-500">{activity.chapter.title}</div>
         <h1 className="mt-1 text-2xl font-semibold text-slate-800">{activity.name}</h1>
       </div>
-      {activity.type === "video" ? (
-        <ActivityVideoPlayer key={activity.id} provider={playback?.provider} playbackId={playback?.playbackId} fileId={playback?.fileId} activityId={activity.id} signedUrl={playback?.signedUrl} progressUrl={progressUrl} initialCompleted={completed} />
+
+      {isVideo ? (
+        <ActivityVideoPlayer
+          key={activity.id}
+          provider={playback?.provider}
+          playbackId={playback?.playbackId}
+          fileId={playback?.fileId}
+          activityId={activity.id}
+          signedUrl={playback?.signedUrl}
+          progressUrl={progressUrl}
+          initialCompleted={completed}
+        />
       ) : (
         <div className="space-y-4 rounded-lg border bg-white p-6">
-          <p className="whitespace-pre-wrap text-sm text-slate-600">{activity.textContent || "本节暂无内容"}</p>
+          <p className="whitespace-pre-wrap text-sm text-slate-600">
+            {activity.textContent || "本节暂无内容"}
+          </p>
           <LessonCompletion progressUrl={progressUrl} initialCompleted={completed} />
         </div>
       )}
-      {next && <Link className="mt-5 block text-sm font-medium text-sky-700 hover:underline"
-        href={`/courses/${params.courseId}/chapters/${next.chapterId}/activities/${next.id}`}>下一节：{next.name} →</Link>}
+
+      {next ? (
+        <Link
+          className="mt-5 block text-sm font-medium text-sky-700 hover:underline"
+          href={`/courses/${params.courseId}/chapters/${next.chapterId}/activities/${next.id}`}
+        >
+          下一节：{next.name} →
+        </Link>
+      ) : null}
     </div>
   );
 }

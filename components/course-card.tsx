@@ -1,4 +1,4 @@
-import Image from "next/image";
+﻿import Image from "next/image";
 import Link from "next/link";
 import { BookOpen } from "lucide-react";
 
@@ -26,21 +26,32 @@ export const CourseCard = ({
   category,
 }: CourseCardProps) => {
   const enrolled = progress !== null && progress !== undefined;
+  const isFacebook = /facebook/i.test(title) || category === "Facebook获客";
 
   return (
     <Link href={`/courses/${id}`}>
-      <div className="group hover:shadow-sm transition overflow-hidden border rounded-lg p-3 h-full">
-        <div className="relative w-full aspect-video rounded-md overflow-hidden">
+      <div
+        className={`group h-full overflow-hidden rounded-xl border p-3 transition hover:shadow-md ${
+          isFacebook ? "border-indigo-200 bg-indigo-50/40" : "border-slate-200 bg-white"
+        }`}
+      >
+        <div className="relative aspect-video w-full overflow-hidden rounded-md">
           <Image fill className="object-cover" alt={title} src={imageUrl} />
+          <div
+            className={`absolute left-2 top-2 rounded-full px-2 py-0.5 text-[11px] font-medium text-white ${
+              isFacebook ? "bg-indigo-600" : "bg-sky-700"
+            }`}
+          >
+            {category || (isFacebook ? "Facebook获客" : "外贸实战")}
+          </div>
         </div>
         <div className="flex flex-col pt-2">
-          <div className="text-lg md:text-base font-medium group-hover:text-sky-700 transition line-clamp-2">
+          <div className="line-clamp-2 text-base font-medium transition group-hover:text-sky-700 md:text-lg">
             {title}
           </div>
-          <p className="text-xs text-muted-foreground">{category}</p>
           {chaptersLength ? (
-            <div className="my-3 flex items-center gap-x-2 text-sm md:text-xs">
-              <div className="flex items-center gap-x-1 text-slate-500">
+            <div className="my-3 flex items-center gap-x-2 text-xs text-slate-500 md:text-sm">
+              <div className="flex items-center gap-x-1">
                 <IconBadge size="sm" icon={BookOpen} />
                 <span>{chaptersLength} 节课</span>
               </div>
@@ -53,7 +64,7 @@ export const CourseCard = ({
               value={progress ?? 0}
             />
           ) : (
-            <p className="text-md md:text-sm font-medium text-slate-700">
+            <p className="text-sm font-medium text-slate-700 md:text-base">
               {formatPrice(price)}
             </p>
           )}

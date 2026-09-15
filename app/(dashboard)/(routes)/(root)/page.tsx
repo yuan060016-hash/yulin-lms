@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+﻿import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { CheckCircle, Clock } from "lucide-react";
 import Link from "next/link";
@@ -18,16 +18,11 @@ export default async function Dashboard() {
 
   let { completedCourses, coursesInProgress } = await getDashboardCourses(userId);
 
-  // Safety net: if dashboard is empty but published courses exist for this teacher/student,
-  // rebuild from purchases + owned courses directly.
   if (completedCourses.length + coursesInProgress.length === 0) {
     const fallback = await db.course.findMany({
       where: {
         isPublished: true,
-        OR: [
-          { userId },
-          { purchases: { some: { userId } } },
-        ],
+        OR: [{ userId }, { purchases: { some: { userId } } }],
       },
       include: {
         category: true,
@@ -42,15 +37,16 @@ export default async function Dashboard() {
     }));
   }
 
+  // Keep both courses visible and sorted with newest first when possible
   const items = [...coursesInProgress, ...completedCourses];
   const mainCourse = items[0];
 
   return (
-    <div className="p-6 space-y-4">
+    <div className="space-y-4 p-6">
       <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-slate-800">雨林外贸 · 学习中心</h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="mt-1 text-sm text-slate-500">
             当前账号：{session?.email || "已登录"}。登录后学习已开通课程。
           </p>
         </div>
@@ -66,12 +62,8 @@ export default async function Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <InfoCard
-          icon={Clock}
-          label="学习中"
-          numberOfItems={coursesInProgress.length}
-        />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <InfoCard icon={Clock} label="学习中" numberOfItems={coursesInProgress.length} />
         <InfoCard
           icon={CheckCircle}
           label="已完成"

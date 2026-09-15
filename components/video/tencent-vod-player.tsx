@@ -100,7 +100,7 @@ export function TencentVodPlayer({ fileId, appId, activityId, onEnded, onError }
           psign,
           autoplay: false,
           controls: true,
-          preload: "auto",
+          preload: "metadata",
           languages: "zh-CN",
         });
         player.on("loadedmetadata", () => {
@@ -138,7 +138,7 @@ export function TencentVodPlayer({ fileId, appId, activityId, onEnded, onError }
           controlsList="nodownload noplaybackrate"
           disablePictureInPicture
           playsInline
-          preload="auto"
+          preload="metadata"
           onEnded={() => onEnded?.()}
           onError={() => onError?.()}
           onContextMenu={(e) => e.preventDefault()}
@@ -159,8 +159,9 @@ export function TencentVodPlayer({ fileId, appId, activityId, onEnded, onError }
         className="h-full w-full"
         playsInline
         webkit-playsinline="true"
-        preload="auto"
+        preload="metadata"
       />
     </div>
   );
 }
+
