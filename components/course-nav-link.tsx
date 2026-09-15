@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useTransition } from "react";
+import { usePathname } from "next/navigation";
+import { useState } from "react";
 
 type Props = {
   href: string;
@@ -12,14 +12,13 @@ type Props = {
 
 export function CourseNavLink({ href, children, className }: Props) {
   const pathname = usePathname();
-  const router = useRouter();
-  const [pending, startTransition] = useTransition();
+  const [pending, setPending] = useState(false);
   const active = pathname === href;
 
   return (
     <Link
       href={href}
-      prefetch
+      prefetch={false}
       aria-current={active ? "page" : undefined}
       aria-busy={pending || undefined}
       className={[
@@ -40,10 +39,11 @@ export function CourseNavLink({ href, children, className }: Props) {
         ) {
           return;
         }
+
+        // Prefer hard navigation to avoid flaky Next.js RSC soft navigations on mobile networks.
         event.preventDefault();
-        startTransition(() => {
-          router.push(href);
-        });
+        setPending(true);
+        window.location.assign(href);
       }}
     >
       {children}

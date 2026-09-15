@@ -1,11 +1,11 @@
 ﻿import { notFound, redirect } from "next/navigation";
-import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getLessonAccess } from "@/lib/lesson-access";
 import { resolvePlaybackSource } from "@/lib/video/provider";
 import { ActivityVideoPlayer } from "./_components/video-player";
 import { LessonCompletion } from "./_components/lesson-completion";
+import { CourseNavLink } from "@/components/course-nav-link";
 
 export default async function ActivityPage({
   params,
@@ -73,12 +73,12 @@ export default async function ActivityPage({
       )}
 
       {next ? (
-        <Link
+        <CourseNavLink
           className="mt-5 block text-sm font-medium text-sky-700 hover:underline"
           href={`/courses/${params.courseId}/chapters/${next.chapterId}/activities/${next.id}`}
         >
           下一节：{next.name} →
-        </Link>
+        </CourseNavLink>
       ) : null}
     </div>
   );

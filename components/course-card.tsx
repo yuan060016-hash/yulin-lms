@@ -1,4 +1,6 @@
-﻿import Image from "next/image";
+"use client";
+
+import Image from "next/image";
 import Link from "next/link";
 import { BookOpen } from "lucide-react";
 
@@ -28,9 +30,26 @@ export const CourseCard = ({
   const enrolled = progress !== null && progress !== undefined;
   const isFacebook = /facebook/i.test(title) || category === "Facebook获客";
   const isLocal = imageUrl.startsWith("/");
+  const href = `/courses/${id}`;
 
   return (
-    <Link href={`/courses/${id}`}>
+    <Link
+      href={href}
+      onClick={(event) => {
+        if (
+          event.defaultPrevented ||
+          event.button !== 0 ||
+          event.metaKey ||
+          event.ctrlKey ||
+          event.shiftKey ||
+          event.altKey
+        ) {
+          return;
+        }
+        event.preventDefault();
+        window.location.assign(href);
+      }}
+    >
       <div
         className={`group h-full overflow-hidden rounded-xl border p-3 transition hover:shadow-md ${
           isFacebook ? "border-indigo-200 bg-indigo-50/40" : "border-slate-200 bg-white"

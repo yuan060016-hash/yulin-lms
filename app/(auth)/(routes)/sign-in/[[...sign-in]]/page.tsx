@@ -18,8 +18,9 @@ function SignInForm() {
     setLoading(true);
     try {
       await axios.post("/api/auth/login", { email, password });
-      router.replace("/");
-      router.refresh();
+      // Hard navigation is more reliable than soft RSC routing on mobile networks.
+      const redirectTo = new URLSearchParams(window.location.search).get("redirect_url") || "/";
+      window.location.assign(redirectTo);
     } catch (err: any) {
       setError(err?.response?.data?.message || "登录失败");
     } finally {

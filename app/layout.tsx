@@ -2,6 +2,7 @@ import './globals.css'
 import type { Metadata } from 'next'
 import { ToastProvider } from '@/components/providers/toaster-provider'
 import { ConfettiProvider } from '@/components/providers/confetti-provider'
+import { ClientRecovery } from '@/components/client-recovery'
 import { AntdRegistry } from '@ant-design/nextjs-registry'
 import 'react-horizontal-scrolling-menu/dist/styles.css'
 
@@ -18,11 +19,13 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <link rel="dns-prefetch" href="//1395361200.vod-qcloud.com" />
         <link rel="preconnect" href="https://1395361200.vod-qcloud.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="//playvideo.qcloud.com" />
       </head>
       <body className="min-h-screen bg-slate-50 font-sans antialiased">
+        <ClientRecovery />
         <ConfettiProvider />
         <ToastProvider />
         <AntdRegistry>{children}</AntdRegistry>
