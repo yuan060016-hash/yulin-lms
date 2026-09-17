@@ -11,7 +11,8 @@ type Props = {
 };
 
 function isHlsUrl(url: string) {
-  return /\.m3u8($|\?)/i.test(url);
+  // Proxy URLs keep .m3u8 inside querystring and may append &exp=&sig=
+  return /\.m3u8/i.test(url) || url.includes("/api/video/vod-proxy");
 }
 
 export function TencentVodPlayer({ fileId, appId, activityId, onEnded, onError }: Props) {
