@@ -34,12 +34,13 @@ function toHttpOrigin(url: URL) {
 }
 
 function optimizeMasterPlaylist(body: string) {
+  if (!body.includes("#EXT-X-STREAM-INF:")) return body;
+
   // Drop 1080p variants to speed up first paint through proxy.
   const lines = body.split(/\r?\n/);
   const out: string[] = [];
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    const next = lines[i + 1] || "";
     if (
       line.includes("#EXT-X-STREAM-INF:") &&
       /RESOLUTION=17\d{2}x10\d{2}/i.test(line)
@@ -50,7 +51,6 @@ function optimizeMasterPlaylist(body: string) {
     out.push(line);
   }
 
-  // Prefer 480p/720p by moving the first mid-res variant near top if present.
   const header: string[] = [];
   const variants: Array<{ info: string; uri: string }> = [];
   for (let i = 0; i < out.length; i++) {
@@ -67,7 +67,6 @@ function optimizeMasterPlaylist(body: string) {
     const m = info.match(/RESOLUTION=(\d+)x(\d+)/i);
     if (!m) return 99999;
     const h = Number(m[2]);
-    // Prefer ~480 first, then 720, then others.
     if (h >= 450 && h <= 520) return 1;
     if (h >= 700 && h <= 780) return 2;
     if (h < 450) return 3;
@@ -78,7 +77,7 @@ function optimizeMasterPlaylist(body: string) {
 }
 
 function rewritePlaylist(body: string, baseUrl: string) {
-  const optimized = /\.m3u8($|\?)/i.test(baseUrl) ? optimizeMasterPlaylist(body) : body;
+  const optimized = optimizeMasterPlaylist(body);
   return optimized
     .split(/\r?\n/)
     .map((line) => {
@@ -130,16 +129,19 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "host not allowed" }, { status: 400 });
   }
 
+  const upstreamHeaders: Record<string, string> = {
+    "User-Agent":
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    Accept: "*/*",
+  };
+  const range = req.headers.get("range");
+  if (range) upstreamHeaders.Range = range;
+
   let upstreamRes: Response;
   try {
     upstreamRes = await fetch(upstream.toString(), {
       cache: "no-store",
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        Accept: "*/*",
-        Range: req.headers.get("range") || "",
-      },
+      headers: upstreamHeaders,
     });
   } catch {
     return NextResponse.json({ error: "upstream fetch failed" }, { status: 502 });
@@ -175,7 +177,6 @@ export async function GET(req: Request) {
   const buf = Buffer.from(await upstreamRes.arrayBuffer());
   const headers: Record<string, string> = {
     "Content-Type": contentType,
-    // Cache media segments at the edge/browser to reduce repeat proxy cost.
     "Cache-Control": "public, max-age=300, stale-while-revalidate=600",
     "Access-Control-Allow-Origin": "*",
   };
