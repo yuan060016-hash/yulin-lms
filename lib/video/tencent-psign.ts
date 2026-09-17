@@ -44,22 +44,57 @@ export async function createTencentVodPsign(input: {
     .sign(secret);
 }
 
-/** Rewrite custom/http VOD hosts to the stable HTTPS default host. */
-export function toHttpsVodPlayUrl(playUrl: string | null | undefined, appId: string) {
+/** Prefer working HTTP custom-domain origin after arrears recovery. */
+export function toHttpCustomVodUrl(playUrl: string | null | undefined) {
   if (!playUrl) return null;
   try {
     const url = new URL(playUrl);
-    // Custom domain currently has no working HTTPS certificate.
     if (
       url.hostname === "vod.yfxshowers.com" ||
       url.hostname.endsWith(".vod-qcloud.com") ||
-      url.protocol === "http:"
+      url.protocol === "http:" ||
+      url.protocol === "https:"
     ) {
-      url.protocol = "https:";
+      url.protocol = "http:";
+      url.hostname = "vod.yfxshowers.com";
+    }
+    return url.toString();
+  } catch {
+    return playUrl.replace(/^https:\/\//i, "http://");
+  }
+}
+
+/**
+ * Rewrite VOD hosts for browser playback.
+ * - proxy: same-origin HTTPS proxy (works while custom-domain cert is broken / default HTTPS down)
+ * - direct: attempt HTTPS custom/default host
+ */
+export function toHttpsVodPlayUrl(
+  playUrl: string | null | undefined,
+  appId: string,
+  options?: { mode?: "proxy" | "direct"; proxyBase?: string }
+) {
+  if (!playUrl) return null;
+  const mode = options?.mode || (process.env.TENCENT_VOD_PLAY_MODE as "proxy" | "direct") || "proxy";
+  const httpUrl = toHttpCustomVodUrl(playUrl);
+  if (!httpUrl) return null;
+
+  if (mode === "proxy") {
+    const proxyBase = options?.proxyBase || "/api/video/vod-proxy";
+    return `${proxyBase}?u=${encodeURIComponent(httpUrl)}`;
+  }
+
+  try {
+    const url = new URL(httpUrl);
+    url.protocol = "https:";
+    // Keep custom domain once certificate is fixed.
+    if (process.env.NEXT_PUBLIC_TENCENT_VOD_PLAY_DOMAIN) {
+      url.hostname = process.env.NEXT_PUBLIC_TENCENT_VOD_PLAY_DOMAIN;
+    } else {
       url.hostname = `${appId}.vod-qcloud.com`;
     }
     return url.toString();
   } catch {
-    return playUrl.replace(/^http:\/\//i, "https://");
+    return httpUrl.replace(/^http:\/\//i, "https://");
   }
 }
