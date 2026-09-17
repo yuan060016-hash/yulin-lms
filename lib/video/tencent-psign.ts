@@ -1,4 +1,5 @@
 ﻿import { SignJWT } from "jose";
+import { buildSignedVodProxyUrl } from "@/lib/video/vod-proxy-sign";
 
 export type TencentContentInfo = {
   audioVideoType: "Original" | "RawAdaptive" | "Transcode" | "ProtectedAdaptive";
@@ -49,15 +50,8 @@ export function toHttpCustomVodUrl(playUrl: string | null | undefined) {
   if (!playUrl) return null;
   try {
     const url = new URL(playUrl);
-    if (
-      url.hostname === "vod.yfxshowers.com" ||
-      url.hostname.endsWith(".vod-qcloud.com") ||
-      url.protocol === "http:" ||
-      url.protocol === "https:"
-    ) {
-      url.protocol = "http:";
-      url.hostname = "vod.yfxshowers.com";
-    }
+    url.protocol = "http:";
+    url.hostname = "vod.yfxshowers.com";
     return url.toString();
   } catch {
     return playUrl.replace(/^https:\/\//i, "http://");
@@ -75,19 +69,21 @@ export function toHttpsVodPlayUrl(
   options?: { mode?: "proxy" | "direct"; proxyBase?: string }
 ) {
   if (!playUrl) return null;
-  const mode = options?.mode || (process.env.TENCENT_VOD_PLAY_MODE as "proxy" | "direct") || "proxy";
+  const mode =
+    options?.mode ||
+    (process.env.TENCENT_VOD_PLAY_MODE as "proxy" | "direct") ||
+    "proxy";
   const httpUrl = toHttpCustomVodUrl(playUrl);
   if (!httpUrl) return null;
 
   if (mode === "proxy") {
     const proxyBase = options?.proxyBase || "/api/video/vod-proxy";
-    return `${proxyBase}?u=${encodeURIComponent(httpUrl)}`;
+    return buildSignedVodProxyUrl(httpUrl, proxyBase);
   }
 
   try {
     const url = new URL(httpUrl);
     url.protocol = "https:";
-    // Keep custom domain once certificate is fixed.
     if (process.env.NEXT_PUBLIC_TENCENT_VOD_PLAY_DOMAIN) {
       url.hostname = process.env.NEXT_PUBLIC_TENCENT_VOD_PLAY_DOMAIN;
     } else {
