@@ -45,23 +45,23 @@ export async function createTencentVodPsign(input: {
     .sign(secret);
 }
 
-/** Prefer working HTTP custom-domain origin after arrears recovery. */
+/** Prefer HTTPS custom-domain once SSL is bound. */
 export function toHttpCustomVodUrl(playUrl: string | null | undefined) {
   if (!playUrl) return null;
   try {
     const url = new URL(playUrl);
-    url.protocol = "http:";
+    url.protocol = "https:";
     url.hostname = "vod.yfxshowers.com";
     return url.toString();
   } catch {
-    return playUrl.replace(/^https:\/\//i, "http://");
+    return playUrl.replace(/^http:\/\//i, "https://");
   }
 }
 
 /**
  * Rewrite VOD hosts for browser playback.
- * - proxy: same-origin HTTPS proxy (works while custom-domain cert is broken / default HTTPS down)
- * - direct: attempt HTTPS custom/default host
+ * - proxy: same-origin HTTPS proxy (fallback if custom-domain cert breaks)
+ * - direct: HTTPS custom/default host (preferred, saves Netlify bandwidth)
  */
 export function toHttpsVodPlayUrl(
   playUrl: string | null | undefined,
@@ -72,17 +72,18 @@ export function toHttpsVodPlayUrl(
   const mode =
     options?.mode ||
     (process.env.TENCENT_VOD_PLAY_MODE as "proxy" | "direct") ||
-    "proxy";
-  const httpUrl = toHttpCustomVodUrl(playUrl);
-  if (!httpUrl) return null;
+    "direct";
+  const httpsCustomUrl = toHttpCustomVodUrl(playUrl);
+  if (!httpsCustomUrl) return null;
 
   if (mode === "proxy") {
     const proxyBase = options?.proxyBase || "/api/video/vod-proxy";
-    return buildSignedVodProxyUrl(httpUrl, proxyBase);
+    const proxyTarget = httpsCustomUrl.replace(/^https:\/\//i, "http://");
+    return buildSignedVodProxyUrl(proxyTarget, proxyBase);
   }
 
   try {
-    const url = new URL(httpUrl);
+    const url = new URL(httpsCustomUrl);
     url.protocol = "https:";
     if (process.env.NEXT_PUBLIC_TENCENT_VOD_PLAY_DOMAIN) {
       url.hostname = process.env.NEXT_PUBLIC_TENCENT_VOD_PLAY_DOMAIN;
@@ -91,6 +92,6 @@ export function toHttpsVodPlayUrl(
     }
     return url.toString();
   } catch {
-    return httpUrl.replace(/^http:\/\//i, "https://");
+    return httpsCustomUrl.replace(/^http:\/\//i, "https://");
   }
 }
