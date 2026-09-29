@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import {
   SESSION_COOKIE,
   createSessionToken,
@@ -26,6 +26,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "账号或密码错误" }, { status: 401 });
     }
 
+    if (!process.env.AUTH_SECRET) {
+      return NextResponse.json({ message: "服务配置缺失 AUTH_SECRET" }, { status: 500 });
+    }
+
     const token = await createSessionToken({
       userId: user.id,
       email: user.email,
@@ -46,14 +50,17 @@ export async function POST(req: Request) {
     res.cookies.set(SESSION_COOKIE, token, {
       httpOnly: true,
       sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
+      secure: true,
       path: "/",
       maxAge: 60 * 60 * 24 * 7,
     });
 
     return res;
-  } catch (error) {
+  } catch (error: any) {
     console.log("[LOGIN]", error);
-    return NextResponse.json({ message: "登录失败" }, { status: 500 });
+    return NextResponse.json({
+      message: "登录失败",
+      detail: String(error?.message || error),
+    }, { status: 500 });
   }
 }
