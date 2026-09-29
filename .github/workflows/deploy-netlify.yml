@@ -20,7 +20,7 @@ jobs:
       - name: Verify course covers exist
         run: ls -lah public/course-covers
       - name: Build and deploy with Netlify
-        run: netlify deploy --build --prod --message "linux fix prisma engine + facebook cover"
+        run: netlify deploy --build --prod --message "linux prisma+covers+perf"
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
