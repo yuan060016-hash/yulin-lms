@@ -18,12 +18,16 @@ const FALLBACK_IMAGES = {
 } as const;
 
 function pickImage(title: string, imageUrl?: string | null) {
-  if (
-    imageUrl &&
-    imageUrl.startsWith("/course-covers/") &&
-    !imageUrl.endsWith("facebook-course.png")
-  ) {
-    return imageUrl;
+  if (imageUrl) {
+    if (imageUrl.startsWith("https://") || imageUrl.startsWith("http://")) {
+      return imageUrl;
+    }
+    if (
+      imageUrl.startsWith("/course-covers/") &&
+      !imageUrl.endsWith("facebook-course.png")
+    ) {
+      return imageUrl;
+    }
   }
   if (/facebook/i.test(title)) return FALLBACK_IMAGES.facebook;
   return FALLBACK_IMAGES.default;

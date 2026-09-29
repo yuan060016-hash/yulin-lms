@@ -6,8 +6,9 @@ const nextConfig = {
       "st.depositphotos.com",
       "i.pinimg.com",
       "images.unsplash.com",
-      "st2.depositphotos.com"
-    ]
+      "st2.depositphotos.com",
+      "ldypfglgwzlstppwhcdl.supabase.co",
+    ],
   },
   reactStrictMode: true,
   poweredByHeader: false,
