@@ -1,7 +1,6 @@
-# Netlify + Next.js
+# Netlify + Next.js (build on Netlify Linux)
 [build]
   command = "npm run build"
-  publish = "public"
 
 [build.environment]
   NODE_VERSION = "18"
