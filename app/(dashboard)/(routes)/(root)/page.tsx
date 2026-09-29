@@ -6,8 +6,9 @@ import Link from "next/link";
 import { getDashboardCourses } from "@/actions/get-dashboard-courses";
 import { CoursesList } from "@/components/courses-list";
 import { InfoCard } from "./_components/info-card";
-import { db } from "@/lib/db";
 import { Button } from "@/components/ui/button";
+
+export const dynamic = "force-dynamic";
 
 export default async function Dashboard() {
   const { userId, session } = await auth();
@@ -16,28 +17,7 @@ export default async function Dashboard() {
     return redirect("/sign-in");
   }
 
-  let { completedCourses, coursesInProgress } = await getDashboardCourses(userId);
-
-  if (completedCourses.length + coursesInProgress.length === 0) {
-    const fallback = await db.course.findMany({
-      where: {
-        isPublished: true,
-        OR: [{ userId }, { purchases: { some: { userId } } }],
-      },
-      include: {
-        category: true,
-        chapters: { where: { isPublished: true } },
-      },
-      orderBy: { createdAt: "desc" },
-    });
-
-    coursesInProgress = fallback.map((course) => ({
-      ...course,
-      progress: 0,
-    }));
-  }
-
-  // Keep both courses visible and sorted with newest first when possible
+  const { completedCourses, coursesInProgress } = await getDashboardCourses(userId);
   const items = [...coursesInProgress, ...completedCourses];
   const mainCourse = items[0];
 

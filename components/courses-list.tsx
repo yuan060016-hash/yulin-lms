@@ -12,14 +12,19 @@ interface CoursesListProps {
   items: CourseWithProgressWithCategory[];
 }
 
-const FALLBACK_IMAGES: Record<string, string> = {
-  facebook: "/course-covers/facebook-lead-gen.jpg",
-  default:
-    "/course-covers/trade-practice.jpg",
-};
+const FALLBACK_IMAGES = {
+  facebook: "/course-covers/facebook-course.jpg",
+  default: "/course-covers/trade-practice.jpg",
+} as const;
 
 function pickImage(title: string, imageUrl?: string | null) {
-  if (imageUrl) return imageUrl;
+  if (
+    imageUrl &&
+    imageUrl.startsWith("/course-covers/") &&
+    !imageUrl.endsWith("facebook-course.png")
+  ) {
+    return imageUrl;
+  }
   if (/facebook/i.test(title)) return FALLBACK_IMAGES.facebook;
   return FALLBACK_IMAGES.default;
 }
@@ -34,7 +39,7 @@ export const CoursesList = ({ items }: CoursesListProps) => {
   return (
     <div>
       <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
-        {items.map((item) => (
+        {items.map((item, index) => (
           <CourseCard
             key={item.id}
             id={item.id}
@@ -44,6 +49,7 @@ export const CoursesList = ({ items }: CoursesListProps) => {
             price={item.price ?? 2980}
             progress={item.progress}
             category={pickCategory(item.title, item?.category?.name)}
+            priority={index < 2}
           />
         ))}
       </div>
@@ -55,4 +61,3 @@ export const CoursesList = ({ items }: CoursesListProps) => {
     </div>
   );
 };
-

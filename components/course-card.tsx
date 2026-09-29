@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -18,6 +18,7 @@ interface CourseCardProps {
   price: number;
   progress?: number | null;
   category?: string;
+  priority?: boolean;
 }
 
 function preferHardNavigation() {
@@ -33,6 +34,7 @@ export const CourseCard = ({
   price,
   progress,
   category,
+  priority = false,
 }: CourseCardProps) => {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -44,7 +46,7 @@ export const CourseCard = ({
   return (
     <Link
       href={href}
-      prefetch={!preferHardNavigation()}
+      prefetch={false}
       aria-busy={pending || undefined}
       className={pending ? "opacity-80" : undefined}
       onClick={(event) => {
@@ -77,8 +79,8 @@ export const CourseCard = ({
             className="object-cover"
             alt={title}
             src={imageUrl}
-            sizes="(max-width: 768px) 100vw, 33vw"
-            priority={false}
+            sizes="(max-width: 768px) 100vw, 360px"
+            priority={priority}
             unoptimized={isLocal}
           />
           <div
