@@ -81,7 +81,7 @@ export const CourseCard = ({
             src={imageUrl}
             sizes="(max-width: 768px) 100vw, 360px"
             priority={priority}
-            unoptimized={isLocal}
+            unoptimized={isLocal || imageUrl.startsWith("http")}
           />
           <div
             className={`absolute left-2 top-2 rounded-full px-2 py-0.5 text-[11px] font-medium text-white ${
@@ -119,3 +119,4 @@ export const CourseCard = ({
     </Link>
   );
 };
+
