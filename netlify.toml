@@ -1,4 +1,4 @@
-﻿# Netlify + Next.js
+# Netlify + Next.js
 [build]
   command = "npm run build"
   publish = "public"
